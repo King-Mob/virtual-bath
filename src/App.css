@@ -1,3 +1,7 @@
+body {
+  background-color: #ffd6ef;
+}
+
 .App {
   text-align: center;
 }
@@ -15,11 +19,18 @@
 
 .bath-container {
   background-color: #ffd6ef;
-  height: 100vh;
 }
 
 h1 {
   margin-top: 0;
+  text-align: center;
+}
+
+.tag-text {
+  text-align: center;
+}
+
+.loading-bath-container {
   text-align: center;
 }
 
@@ -56,11 +67,11 @@ h1 {
 }
 
 .cold {
-  background-image: linear-gradient(rgb(109, 216, 252), rgba(0, 0, 0, 0));
+  background-image: linear-gradient(rgb(109, 216, 255), rgba(0, 0, 0, 0));
   margin-left: 2rem;
 }
 
 .hot {
   background-image: linear-gradient(rgb(200, 241, 255), rgba(0, 0, 0, 0));
-  margin-left: 5rem;
+  margin-left: 8rem;
 }
