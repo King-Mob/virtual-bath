@@ -75,3 +75,26 @@ h1 {
   background-image: linear-gradient(rgb(200, 241, 255), rgba(0, 0, 0, 0));
   margin-left: 8rem;
 }
+
+.new-bath-menu-button {
+  position: absolute;
+  left: 55%;
+}
+
+.new-bath-menu-container {
+  width: 30%;
+  position: absolute;
+  left: 55%;
+  background-color: #ffd6ef;
+  text-align: center;
+  border: solid 10px white;
+  border-radius: 20%;
+  padding: 1rem 0rem;
+}
+
+.new-bath-menu-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 0rem 1rem;
+}
