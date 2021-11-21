@@ -77,14 +77,12 @@ h1 {
 }
 
 .new-bath-menu-button {
-  position: absolute;
-  left: 55%;
+  margin-left: 25%;
 }
 
 .new-bath-menu-container {
-  width: 30%;
-  position: absolute;
-  left: 55%;
+  margin-left: 25%;
+  width: 20rem;
   background-color: #ffd6ef;
   text-align: center;
   border: solid 10px white;

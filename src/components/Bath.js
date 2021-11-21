@@ -4,7 +4,7 @@ import { MatrixContext } from "../context/MatrixContext";
 import "../App.css";
 import NewBathMenu from "./NewBathMenu";
 
-const Bath = ({ bathId }) => {
+const Bath = ({ privateBath }) => {
   const { client } = useContext(MatrixContext);
   const [loadingMessage, setLoadingMessage] = useState("connecting to bath...");
   const [waterVolume, setWaterVolume] = useState(50);
@@ -16,9 +16,12 @@ const Bath = ({ bathId }) => {
   const [bathName, setBathName] = useState();
   const [counter, setCounter] = useState(0);
 
-  if (!bathId) {
+  let bathId;
+  if (privateBath) {
     let { bath } = useParams();
     bathId = bath;
+  } else {
+    bathId = "!pjOusktacwpnwSwqGj:matrix.org";
   }
 
   const toggleColdTap = () => {
