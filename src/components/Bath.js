@@ -150,15 +150,7 @@ const Bath = ({ privateBath }) => {
         switch (eventType) {
           case "bath.create":
             coldTemp = item.event.content.taps[0];
-            setColdTap({
-              flow: 0,
-              temp: item.event.content.taps[0],
-            });
             hotTemp = item.event.content.taps[1];
-            setHotTap({
-              flow: 0,
-              temp: item.event.content.taps[1],
-            });
             break;
           case "bath.tap.turn":
             if (item.event.content.temp == 40) {
@@ -184,6 +176,14 @@ const Bath = ({ privateBath }) => {
       console.log(waterVolume);
       setWaterVolume(waterVolume);
       setWaterTemp(waterTemp);
+      setColdTap({
+        flow: coldFlow,
+        temp: coldTemp,
+      });
+      setHotTap({
+        flow: hotFlow,
+        temp: hotTemp,
+      });
 
       setBathName(firstBath.name);
 
