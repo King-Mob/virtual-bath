@@ -24,6 +24,13 @@ const Bath = ({ privateBath }) => {
     bathId = "!pjOusktacwpnwSwqGj:matrix.org";
   }
 
+  const sendSnapShot = () => {
+    client.sendEvent(bathId, "bath.snapshot", {
+      waterTemp: Math.round(waterTemp),
+      waterVolume: Math.round(waterVolume),
+    });
+  };
+
   const toggleColdTap = () => {
     if (coldTap.flow == 0) {
       client.sendEvent(bathId, "bath.tap.turn", {
@@ -36,6 +43,7 @@ const Bath = ({ privateBath }) => {
         flow: 0,
       });
     }
+    sendSnapShot();
   };
 
   const toggleHotTap = () => {
@@ -50,6 +58,7 @@ const Bath = ({ privateBath }) => {
         flow: 0,
       });
     }
+    sendSnapShot();
   };
 
   const togglePlug = () => {
@@ -58,6 +67,7 @@ const Bath = ({ privateBath }) => {
     } else {
       client.sendEvent(bathId, "bath.plug.push", {});
     }
+    sendSnapShot();
   };
 
   const handleEvent = (event) => {
@@ -65,17 +75,22 @@ const Bath = ({ privateBath }) => {
     console.log(event);
 
     const eventType = event.event.type;
+    const content = event.event.content;
 
     switch (eventType) {
+      case "bath.snapshot":
+        setWaterTemp(content.waterTemp);
+        setWaterVolume(content.waterVolume);
+        break;
       case "bath.tap.turn":
-        if (event.event.content.temp == hotTap.temp) {
+        if (content.temp == hotTap.temp) {
           setHotTap({
-            flow: event.event.content.flow,
+            flow: content.flow,
             temp: hotTap.temp,
           });
         } else {
           setColdTap({
-            flow: event.event.content.flow,
+            flow: content.flow,
             temp: coldTap.temp,
           });
         }
@@ -148,6 +163,10 @@ const Bath = ({ privateBath }) => {
         const eventType = item.event.type;
 
         switch (eventType) {
+          case "bath.snapshot":
+            waterTemp = item.event.content.waterTemp;
+            waterVolume = item.event.content.waterVolume;
+            break;
           case "bath.create":
             coldTemp = item.event.content.taps[0];
             hotTemp = item.event.content.taps[1];
