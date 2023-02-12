@@ -12,6 +12,7 @@ const Bath = ({ privateBath }) => {
   const [coldTap, setColdTap] = useState();
   const [hotTap, setHotTap] = useState();
   const [plugged, setPlugged] = useState(true);
+  const [overflow, setOverflow] = useState(0);
   const [bathLoaded, setBathLoaded] = useState(false);
   const [bathName, setBathName] = useState();
   const [counter, setCounter] = useState(0);
@@ -31,42 +32,17 @@ const Bath = ({ privateBath }) => {
     });
   };
 
-  const toggleColdTap = () => {
-    if (coldTap.flow == 0) {
-      client.sendEvent(bathId, "bath.tap.turn", {
-        temp: coldTap.temp,
-        flow: 10,
-      });
-    } else {
-      client.sendEvent(bathId, "bath.tap.turn", {
-        temp: coldTap.temp,
-        flow: 0,
-      });
-    }
+  const turnTap = (tap) => {
+    const { temp, flow } = tap;
+    client.sendEvent(bathId, "bath.tap.turn", {
+      temp: temp,
+      flow: flow === 0 ? 10 : 0
+    });
     sendSnapShot();
-  };
-
-  const toggleHotTap = () => {
-    if (hotTap.flow == 0) {
-      client.sendEvent(bathId, "bath.tap.turn", {
-        temp: hotTap.temp,
-        flow: 10,
-      });
-    } else {
-      client.sendEvent(bathId, "bath.tap.turn", {
-        temp: hotTap.temp,
-        flow: 0,
-      });
-    }
-    sendSnapShot();
-  };
+  }
 
   const togglePlug = () => {
-    if (plugged) {
-      client.sendEvent(bathId, "bath.plug.pull", {});
-    } else {
-      client.sendEvent(bathId, "bath.plug.push", {});
-    }
+    client.sendEvent(bathId, plugged ? "bath.plug.pull" : "bath.plug.push", {});
     sendSnapShot();
   };
 
@@ -74,35 +50,36 @@ const Bath = ({ privateBath }) => {
     //change taps and plug as events come in
     console.log(event);
 
-    const eventType = event.event.type;
-    const content = event.event.content;
+    const { content, room_id, type } = event.event;
 
-    switch (eventType) {
-      case "bath.snapshot":
-        setWaterTemp(content.waterTemp);
-        setWaterVolume(content.waterVolume);
-        break;
-      case "bath.tap.turn":
-        if (content.temp == hotTap.temp) {
-          setHotTap({
-            flow: content.flow,
-            temp: hotTap.temp,
-          });
-        } else {
-          setColdTap({
-            flow: content.flow,
-            temp: coldTap.temp,
-          });
-        }
-        break;
-      case "bath.plug.pull":
-        setPlugged(false);
-        break;
-      case "bath.plug.push":
-        setPlugged(true);
-        break;
-      default:
-        break;
+    if (room_id === bathId) {
+      switch (type) {
+        case "bath.snapshot":
+          setWaterTemp(content.waterTemp);
+          setWaterVolume(content.waterVolume);
+          break;
+        case "bath.tap.turn":
+          if (content.temp == hotTap.temp) {
+            setHotTap({
+              flow: content.flow,
+              temp: hotTap.temp,
+            });
+          } else {
+            setColdTap({
+              flow: content.flow,
+              temp: coldTap.temp,
+            });
+          }
+          break;
+        case "bath.plug.pull":
+          setPlugged(false);
+          break;
+        case "bath.plug.push":
+          setPlugged(true);
+          break;
+        default:
+          break;
+      }
     }
   };
 
@@ -148,8 +125,8 @@ const Bath = ({ privateBath }) => {
         waterTemp =
           waterVolume + potentialWaterVolume != 0
             ? (waterTemp * waterVolume +
-                (potentialWaterVolume - waterVolume) * currentFlowTemp) /
-              (waterVolume + (potentialWaterVolume - waterVolume))
+              (potentialWaterVolume - waterVolume) * currentFlowTemp) /
+            (waterVolume + (potentialWaterVolume - waterVolume))
             : 0;
 
         if (potentialWaterVolume < 0) {
@@ -238,20 +215,21 @@ const Bath = ({ privateBath }) => {
       const currentFlowTemp =
         coldTap.flow + hotTap.flow != 0
           ? (coldTap.flow * coldTap.temp + hotTap.flow * hotTap.temp) /
-            (coldTap.flow + hotTap.flow)
+          (coldTap.flow + hotTap.flow)
           : oldTemp;
 
       const newWater = Math.abs(potentialWaterVolume - waterVolume);
 
       setWaterTemp(
         (oldTemp * waterVolume + newWater * currentFlowTemp) /
-          (waterVolume + newWater)
+        (waterVolume + newWater)
       );
 
       if (potentialWaterVolume < 0) {
         setWaterVolume(0);
       } else if (potentialWaterVolume > 100) {
         setWaterVolume(100);
+        setOverflow(overflow + potentialWaterVolume - 100);
       } else {
         setWaterVolume(potentialWaterVolume);
       }
@@ -273,6 +251,15 @@ const Bath = ({ privateBath }) => {
       <NewBathMenu />
       {bathLoaded ? (
         <div className="tub-container">
+          <div className="overflow"
+            style={{
+              backgroundImage: `linear-gradient(
+          to top,
+          rgba(${calcWaterColour(waterTemp)}, 255, 1) ${overflow}%,
+          rgba(0, 0, 0, 0) 1px,
+          rgba(0, 0, 0, 0)
+        )`,
+            }} />
           <p>
             {bathName} is {Math.round(waterVolume)}% full and{" "}
             {Math.round(waterTemp)}°c
@@ -280,10 +267,10 @@ const Bath = ({ privateBath }) => {
           <div className="taps-container">
             {coldTap && hotTap && (
               <>
-                <button onClick={() => toggleColdTap()}>
+                <button onClick={() => turnTap(coldTap)}>
                   Cold tap {coldTap.temp}°c
                 </button>
-                <button onClick={() => toggleHotTap()}>
+                <button onClick={() => turnTap(hotTap)}>
                   Hot tap {hotTap.temp}°c
                 </button>
               </>
@@ -317,8 +304,8 @@ const Bath = ({ privateBath }) => {
                 waterVolume == 0
                   ? `linear-gradient(rgba(255, 214, 239, 1), rgba(0, 0, 0, 0))`
                   : `linear-gradient(rgba(${calcWaterColour(
-                      waterTemp
-                    )}, 255, 1), rgba(0, 0, 0, 0))`,
+                    waterTemp
+                  )}, 255, 1), rgba(0, 0, 0, 0))`,
             }}
           ></div>
         </div>
