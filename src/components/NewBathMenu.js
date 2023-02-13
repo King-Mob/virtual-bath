@@ -31,7 +31,7 @@ const NewBathMenu = () => {
       {newBathMenuVisible ? (
         <div className="new-bath-menu-container">
           {newBathId ? (
-            <Link to={`../private/${newBathId}`}>Go to {newBathName}</Link>
+            <Link to={`../bath/${newBathId}`}>Go to {newBathName}</Link>
           ) : (
             <>
               <div className="new-bath-menu-item">

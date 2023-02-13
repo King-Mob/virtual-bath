@@ -6,7 +6,7 @@ import NewBathMenu from "./NewBathMenu";
 
 const Bath = ({ privateBath }) => {
   const { client } = useContext(MatrixContext);
-  const [loadingMessage, setLoadingMessage] = useState("connecting to bath...");
+  const [loadingMessage, setLoadingMessage] = useState("joining the baths...");
   const [waterVolume, setWaterVolume] = useState(50);
   const [waterTemp, setWaterTemp] = useState(0);
   const [coldTap, setColdTap] = useState({ temp: 10, flow: 0 });
