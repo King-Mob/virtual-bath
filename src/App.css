@@ -47,6 +47,8 @@ h1 {
 
 .tub-container {
   width: fit-content;
+  overflow: hidden;
+  height: 23rem;
 }
 
 .tub {
