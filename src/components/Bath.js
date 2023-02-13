@@ -9,8 +9,8 @@ const Bath = ({ privateBath }) => {
   const [loadingMessage, setLoadingMessage] = useState("connecting to bath...");
   const [waterVolume, setWaterVolume] = useState(50);
   const [waterTemp, setWaterTemp] = useState(0);
-  const [coldTap, setColdTap] = useState();
-  const [hotTap, setHotTap] = useState();
+  const [coldTap, setColdTap] = useState({ temp: 10, flow: 0 });
+  const [hotTap, setHotTap] = useState({ temp: 40, flow: 0 });
   const [plugged, setPlugged] = useState(true);
   const [overflow, setOverflow] = useState(0);
   const [bathLoaded, setBathLoaded] = useState(false);
@@ -184,18 +184,13 @@ const Bath = ({ privateBath }) => {
       setBathName(firstBath.name);
 
       setBathLoaded(true);
+      client.on("Room.timeline", handleEvent);
     }
   };
 
   useEffect(() => {
     initialiseBath();
   }, [client]);
-
-  useEffect(() => {
-    if (coldTap && hotTap) {
-      client.on("Room.timeline", handleEvent);
-    }
-  }, [coldTap, hotTap]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -246,6 +241,8 @@ const Bath = ({ privateBath }) => {
     return red + "," + blue;
   };
 
+  const overflowing = waterVolume >= 100 && (coldTap.flow > 0 || hotTap.flow > 0);
+
   return (
     <div className="bath-container">
       <NewBathMenu />
@@ -279,8 +276,24 @@ const Bath = ({ privateBath }) => {
           <div className="stream-container">
             {coldTap && hotTap && (
               <>
-                {coldTap.flow > 0 ? <div className="stream cold"></div> : null}
-                {hotTap.flow > 0 ? <div className="stream hot"></div> : null}
+                {overflowing && <div className="stream overflow-left" style={{
+                  backgroundImage:
+                    waterVolume == 0
+                      ? `linear-gradient(rgba(255, 214, 239, 1), rgba(0, 0, 0, 0))`
+                      : `linear-gradient(rgba(${calcWaterColour(
+                        waterTemp
+                      )}, 255, 1), rgba(0, 0, 0, 0))`,
+                }} />}
+                {coldTap.flow > 0 && <div className="stream cold" />}
+                {hotTap.flow > 0 && <div className="stream hot" />}
+                {overflowing && <div className="stream overflow-right" style={{
+                  backgroundImage:
+                    waterVolume == 0
+                      ? `linear-gradient(rgba(255, 214, 239, 1), rgba(0, 0, 0, 0))`
+                      : `linear-gradient(rgba(${calcWaterColour(
+                        waterTemp
+                      )}, 255, 1), rgba(0, 0, 0, 0))`,
+                }} />}
               </>
             )}
           </div>
