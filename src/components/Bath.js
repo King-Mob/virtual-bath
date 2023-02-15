@@ -6,6 +6,8 @@ import NewBathMenu from "./NewBathMenu";
 
 const Bath = ({ privateBath }) => {
   const { client } = useContext(MatrixContext);
+  const [bathId, setBathId] = useState("!pjOusktacwpnwSwqGj:matrix.org");
+  const { bathUrl } = useParams();
   const [loadingMessage, setLoadingMessage] = useState("joining the baths...");
   const [waterVolume, setWaterVolume] = useState(50);
   const [waterTemp, setWaterTemp] = useState(0);
@@ -16,14 +18,15 @@ const Bath = ({ privateBath }) => {
   const [bathLoaded, setBathLoaded] = useState(false);
   const [bathName, setBathName] = useState();
   const [counter, setCounter] = useState(0);
+  const [batherId, setBatherId] = useState(Math.round(Math.random() * 1000000));
+  const [bathers, setBathers] = useState([{ id: batherId, time: Date.now() }]);
+  const [mostRecentBather, setMostRecentBather] = useState({ id: batherId, time: Date.now() });
 
-  let bathId;
-  if (privateBath) {
-    let { bath } = useParams();
-    bathId = bath;
-  } else {
-    bathId = "!pjOusktacwpnwSwqGj:matrix.org";
-  }
+  useEffect(() => {
+    if (privateBath) {
+      setBathId(bathUrl);
+    }
+  }, []);
 
   const sendSnapShot = () => {
     client.sendEvent(bathId, "bath.snapshot", {
@@ -46,7 +49,7 @@ const Bath = ({ privateBath }) => {
     sendSnapShot();
   };
 
-  const handleEvent = (event) => {
+  const handleEvent = (event, coldTemp, hotTemp) => {
     //change taps and plug as events come in
     console.log(event);
 
@@ -59,15 +62,15 @@ const Bath = ({ privateBath }) => {
           setWaterVolume(content.waterVolume);
           break;
         case "bath.tap.turn":
-          if (content.temp == hotTap.temp) {
+          if (content.temp == hotTemp) {
             setHotTap({
               flow: content.flow,
-              temp: hotTap.temp,
+              temp: hotTemp,
             });
           } else {
             setColdTap({
               flow: content.flow,
-              temp: coldTap.temp,
+              temp: coldTemp,
             });
           }
           break;
@@ -76,6 +79,12 @@ const Bath = ({ privateBath }) => {
           break;
         case "bath.plug.push":
           setPlugged(true);
+          break;
+        case "bath.presence":
+          setMostRecentBather({
+            id: content.id,
+            time: event.event.origin_server_ts
+          })
           break;
         default:
           break;
@@ -86,6 +95,8 @@ const Bath = ({ privateBath }) => {
   const initialiseBath = async () => {
     if (client) {
       const firstBath = await client.getRoom(bathId);
+      console.log(bathId)
+      console.log(firstBath);
       await client.paginateEventTimeline(
         firstBath.timelineSets[0].liveTimeline,
         {
@@ -149,7 +160,7 @@ const Bath = ({ privateBath }) => {
             hotTemp = item.event.content.taps[1];
             break;
           case "bath.tap.turn":
-            if (item.event.content.temp == 40) {
+            if (item.event.content.temp == hotTemp) {
               hotFlow = item.event.content.flow;
             } else {
               coldFlow = item.event.content.flow;
@@ -184,13 +195,13 @@ const Bath = ({ privateBath }) => {
       setBathName(firstBath.name);
 
       setBathLoaded(true);
-      client.on("Room.timeline", handleEvent);
+      client.on("Room.timeline", (event) => handleEvent(event, coldTemp, hotTemp));
     }
   };
 
   useEffect(() => {
     initialiseBath();
-  }, [client]);
+  }, [client, bathId]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -229,7 +240,26 @@ const Bath = ({ privateBath }) => {
         setWaterVolume(potentialWaterVolume);
       }
     }
+
+    if (client && counter % 100 == 0)
+      client.sendEvent(bathId, "bath.presence", { id: batherId });
+
   }, [counter]);
+
+  useEffect(() => {
+    const allBathers = bathers.concat([mostRecentBather]);
+
+    const uniqueBathers = [];
+    allBathers.reverse(); //look for unique bathers, keeping the most recently added
+    allBathers.forEach(bather => {
+      if (!uniqueBathers.find(possibleDuplicateBather => possibleDuplicateBather.id == bather.id))
+        uniqueBathers.push(bather);
+    });
+
+    const recentBathers = uniqueBathers.filter(bather => (Date.now() - bather.time) < 20000);
+    setBathers(recentBathers);
+
+  }, [mostRecentBather])
 
   const calcWaterColour = (waterTemp) => {
     const tapHeatDifference = hotTap.temp - coldTap.temp;
@@ -245,7 +275,7 @@ const Bath = ({ privateBath }) => {
 
   return (
     <div className="bath-container">
-      <NewBathMenu />
+      <NewBathMenu setBathId={setBathId} setBathLoaded={setBathLoaded} />
       {bathLoaded ? (
         <div className="tub-container">
           <div className="overflow"
@@ -258,8 +288,9 @@ const Bath = ({ privateBath }) => {
         )`,
             }} />
           <p>
-            {bathName} is {Math.round(waterVolume)}% full and{" "}
-            {Math.round(waterTemp)}°c
+            {bathName} is {Math.round(waterVolume)}% full
+            {waterVolume > 0 && ` and ${Math.round(waterTemp)}°c`}
+            {` with ${bathers.length} in the bath.`}
           </p>
           <div className="taps-container">
             {coldTap && hotTap && (

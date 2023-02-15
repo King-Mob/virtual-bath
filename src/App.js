@@ -10,7 +10,7 @@ const App = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Bath privateBath={false} />} />
-          <Route path="/bath/:bath" element={<Bath privateBath={true} />} />
+          <Route path="/bath/:bathUrl" element={<Bath privateBath={true} />} />
         </Routes>
       </BrowserRouter>
     </div>

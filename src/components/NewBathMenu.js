@@ -1,18 +1,20 @@
 import React, { useContext, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { MatrixContext } from "../context/MatrixContext";
 import "../App.css";
 
-const NewBathMenu = () => {
+const NewBathMenu = ({ setBathId, setBathLoaded }) => {
   const { client } = useContext(MatrixContext);
+  const navigate = useNavigate();
   const [newBathMenuVisible, setNewBathMenuVisible] = useState(false);
   const [newBathName, setNewBathName] = useState("");
   const [newColdTemp, setNewColdTemp] = useState(10);
   const [newHotTemp, setNewHotTemp] = useState(40);
-  const [newBathId, setNewBathId] = useState();
+  const [creatingBath, setCreatingBath] = useState(false);
 
   const createBath = async () => {
     if (newBathName.length > 0) {
+      setCreatingBath(true);
       const newBath = await client.createRoom({
         visibility: "private",
         name: newBathName,
@@ -22,63 +24,66 @@ const NewBathMenu = () => {
         taps: [newColdTemp, newHotTemp],
       });
 
-      setNewBathId(newBath.room_id);
+      setCreatingBath(false);
+      setNewBathMenuVisible(false);
+      setBathLoaded(false);
+      setBathId(newBath.room_id);
+      navigate(`../bath/${newBath.room_id}`);
     }
   };
 
   return (
     <div>
-      {newBathMenuVisible ? (
-        <div className="new-bath-menu-container">
-          {newBathId ? (
-            <Link to={`../bath/${newBathId}`}>Go to {newBathName}</Link>
-          ) : (
-            <>
-              <div className="new-bath-menu-item">
-                <label for="bathName">Name</label>
-                <input
-                  type="text"
-                  value={newBathName}
-                  onChange={(e) => setNewBathName(e.target.value)}
-                  placeholder="new bath name"
-                  name="bathName"
-                ></input>
-              </div>
-              <div className="new-bath-menu-item">
-                <label for="coldtemp">Cold temp</label>
-                <input
-                  type="number"
-                  value={newColdTemp}
-                  onChange={(e) => setNewColdTemp(e.target.value)}
-                  placeholder="temp in °c"
-                  name="coldTemp"
-                ></input>
-              </div>
-              <div className="new-bath-menu-item">
-                <label for="hotTemp">Hot temp</label>
-                <input
-                  type="number"
-                  value={newHotTemp}
-                  onChange={(e) => setNewHotTemp(e.target.value)}
-                  placeholder="temp in °c"
-                  name="hotTemp"
-                ></input>
-              </div>
-              <button onClick={() => setNewBathMenuVisible(false)}>
-                cancel
-              </button>
-              <button onClick={createBath}>Create Bath</button>
-            </>
-          )}
-        </div>
-      ) : (
-        <button
-          onClick={() => setNewBathMenuVisible(true)}
-          className="new-bath-menu-button"
-        >
-          create new bath
-        </button>
-      )}
+      <button
+        onClick={() => setNewBathMenuVisible(!newBathMenuVisible)}
+        className="new-bath-menu-button"
+      >
+        create new bath
+      </button>
+      {newBathMenuVisible && <div className="new-bath-menu-container">
+        {creatingBath ? (
+          <p>
+            Creating {newBathName}...
+          </p>
+        ) : (
+          <>
+            <div className="new-bath-menu-item">
+              <label for="bathName">Name</label>
+              <input
+                type="text"
+                value={newBathName}
+                onChange={(e) => setNewBathName(e.target.value)}
+                placeholder="new bath name"
+                name="bathName"
+              ></input>
+            </div>
+            <div className="new-bath-menu-item">
+              <label for="coldtemp">Cold temp</label>
+              <input
+                type="number"
+                value={newColdTemp}
+                onChange={(e) => setNewColdTemp(e.target.value)}
+                placeholder="temp in °c"
+                name="coldTemp"
+              ></input>
+            </div>
+            <div className="new-bath-menu-item">
+              <label for="hotTemp">Hot temp</label>
+              <input
+                type="number"
+                value={newHotTemp}
+                onChange={(e) => setNewHotTemp(e.target.value)}
+                placeholder="temp in °c"
+                name="hotTemp"
+              ></input>
+            </div>
+            <button onClick={() => setNewBathMenuVisible(false)}>
+              cancel
+            </button>
+            <button onClick={createBath}>Create Bath</button>
+          </>
+        )}
+      </div>}
     </div>
   );
 };

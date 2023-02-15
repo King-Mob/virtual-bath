@@ -101,11 +101,14 @@ h1 {
 }
 
 .new-bath-menu-container {
+  position: absolute;
+  margin-left: -7rem;
+  margin-top: -2rem;
   width: fit-content;
   width: 20rem;
   background-color: #ffd6ef;
   text-align: center;
-  border: solid 10px white;
+  border: solid 0.5rem white;
   border-radius: 20%;
   padding: 1rem 0rem;
 }
