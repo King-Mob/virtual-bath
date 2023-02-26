@@ -6,7 +6,7 @@ import NewBathMenu from "./NewBathMenu";
 
 const Bath = ({ privateBath }) => {
   const { client } = useContext(MatrixContext);
-  const [bathId, setBathId] = useState("!pjOusktacwpnwSwqGj:matrix.org");
+  const [bathId, setBathId] = useState(process.env.REACT_APP_PUBLIC_BATH_ID);
   const { bathUrl } = useParams();
   const [loadingMessage, setLoadingMessage] = useState("joining the baths...");
   const [waterVolume, setWaterVolume] = useState(50);
@@ -275,7 +275,7 @@ const Bath = ({ privateBath }) => {
 
   return (
     <div className="bath-container">
-      <NewBathMenu setBathId={setBathId} setBathLoaded={setBathLoaded} />
+      {bathLoaded && <NewBathMenu setBathId={setBathId} setBathLoaded={setBathLoaded} />}
       {bathLoaded ? (
         <div className="tub-container">
           <div className="overflow"

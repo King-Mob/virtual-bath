@@ -38,7 +38,7 @@ const NewBathMenu = ({ setBathId, setBathLoaded }) => {
         onClick={() => setNewBathMenuVisible(!newBathMenuVisible)}
         className="new-bath-menu-button"
       >
-        create new bath
+        Create your own bath
       </button>
       {newBathMenuVisible && <div className="new-bath-menu-container">
         {creatingBath ? (

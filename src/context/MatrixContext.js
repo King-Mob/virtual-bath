@@ -21,6 +21,7 @@ export const MatrixContextProvider = (props) => {
     matrixClient.once("sync", async (state, prevState, res) => {
       // state will be 'PREPARED' when the client is ready to use
       setClient(matrixClient);
+
     });
   };
 
