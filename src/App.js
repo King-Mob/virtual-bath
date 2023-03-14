@@ -1,10 +1,20 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Bath from "./components/Bath";
+import Settings from "./components/Settings";
+
+const checkHighContrast = () => {
+  const highContrast = localStorage.getItem("bath-high-contrast");
+  if (highContrast)
+    document.getElementsByTagName("body")[0].style.backgroundColor = "#f562f0";
+}
 
 const App = () => {
+  checkHighContrast();
+
   return (
     <div>
+      <Settings />
       <h1>Virtual Bath</h1>
       <p className="tag-text">The world's leading online multi-user bathing experience. <br /> Powered by Matrix, <a href="https://write.as/king-mob/introducing-virtual-bath-the-worlds-leading-online-bathing-experience" target="_blank">find out how</a></p>
       <BrowserRouter>
