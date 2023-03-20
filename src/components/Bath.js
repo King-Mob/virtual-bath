@@ -20,7 +20,10 @@ const Bath = ({ privateBath }) => {
   const [counter, setCounter] = useState(0);
   const [batherId, setBatherId] = useState(Math.round(Math.random() * 1000000));
   const [bathers, setBathers] = useState([{ id: batherId, time: Date.now() }]);
-  const [mostRecentBather, setMostRecentBather] = useState({ id: batherId, time: Date.now() });
+  const [mostRecentBather, setMostRecentBather] = useState({
+    id: batherId,
+    time: Date.now(),
+  });
 
   useEffect(() => {
     if (privateBath) {
@@ -39,10 +42,10 @@ const Bath = ({ privateBath }) => {
     const { temp, flow } = tap;
     client.sendEvent(bathId, "bath.tap.turn", {
       temp: temp,
-      flow: flow === 0 ? 10 : 0
+      flow: flow === 0 ? 10 : 0,
     });
     sendSnapShot();
-  }
+  };
 
   const togglePlug = () => {
     client.sendEvent(bathId, plugged ? "bath.plug.pull" : "bath.plug.push", {});
@@ -83,8 +86,8 @@ const Bath = ({ privateBath }) => {
         case "bath.presence":
           setMostRecentBather({
             id: content.id,
-            time: event.event.origin_server_ts
-          })
+            time: event.event.origin_server_ts,
+          });
           break;
         default:
           break;
@@ -95,7 +98,7 @@ const Bath = ({ privateBath }) => {
   const initialiseBath = async () => {
     if (client) {
       const firstBath = await client.getRoom(bathId);
-      console.log(bathId)
+      console.log(bathId);
       console.log(firstBath);
       await client.paginateEventTimeline(
         firstBath.timelineSets[0].liveTimeline,
@@ -136,8 +139,8 @@ const Bath = ({ privateBath }) => {
         waterTemp =
           waterVolume + potentialWaterVolume != 0
             ? (waterTemp * waterVolume +
-              (potentialWaterVolume - waterVolume) * currentFlowTemp) /
-            (waterVolume + (potentialWaterVolume - waterVolume))
+                (potentialWaterVolume - waterVolume) * currentFlowTemp) /
+              (waterVolume + (potentialWaterVolume - waterVolume))
             : 0;
 
         if (potentialWaterVolume < 0) {
@@ -195,7 +198,9 @@ const Bath = ({ privateBath }) => {
       setBathName(firstBath.name);
 
       setBathLoaded(true);
-      client.on("Room.timeline", (event) => handleEvent(event, coldTemp, hotTemp));
+      client.on("Room.timeline", (event) =>
+        handleEvent(event, coldTemp, hotTemp)
+      );
     }
   };
 
@@ -221,14 +226,14 @@ const Bath = ({ privateBath }) => {
       const currentFlowTemp =
         coldTap.flow + hotTap.flow != 0
           ? (coldTap.flow * coldTap.temp + hotTap.flow * hotTap.temp) /
-          (coldTap.flow + hotTap.flow)
+            (coldTap.flow + hotTap.flow)
           : oldTemp;
 
       const newWater = Math.abs(potentialWaterVolume - waterVolume);
 
       setWaterTemp(
         (oldTemp * waterVolume + newWater * currentFlowTemp) /
-        (waterVolume + newWater)
+          (waterVolume + newWater)
       );
 
       if (potentialWaterVolume < 0) {
@@ -243,7 +248,6 @@ const Bath = ({ privateBath }) => {
 
     if (client && counter % 100 == 0)
       client.sendEvent(bathId, "bath.presence", { id: batherId });
-
   }, [counter]);
 
   useEffect(() => {
@@ -251,15 +255,20 @@ const Bath = ({ privateBath }) => {
 
     const uniqueBathers = [];
     allBathers.reverse(); //look for unique bathers, keeping the most recently added
-    allBathers.forEach(bather => {
-      if (!uniqueBathers.find(possibleDuplicateBather => possibleDuplicateBather.id == bather.id))
+    allBathers.forEach((bather) => {
+      if (
+        !uniqueBathers.find(
+          (possibleDuplicateBather) => possibleDuplicateBather.id == bather.id
+        )
+      )
         uniqueBathers.push(bather);
     });
 
-    const recentBathers = uniqueBathers.filter(bather => (Date.now() - bather.time) < 20000);
+    const recentBathers = uniqueBathers.filter(
+      (bather) => Date.now() - bather.time < 20000
+    );
     setBathers(recentBathers);
-
-  }, [mostRecentBather])
+  }, [mostRecentBather]);
 
   const calcWaterColour = (waterTemp) => {
     const tapHeatDifference = hotTap.temp - coldTap.temp;
@@ -271,14 +280,25 @@ const Bath = ({ privateBath }) => {
     return red + "," + blue;
   };
 
-  const overflowing = waterVolume >= 100 && (coldTap.flow > 0 || hotTap.flow > 0);
+  const overflowing =
+    waterVolume >= 100 && (coldTap.flow > 0 || hotTap.flow > 0);
 
   return (
     <div className="bath-container">
-      {bathLoaded && <NewBathMenu setBathId={setBathId} setBathLoaded={setBathLoaded} />}
+      {bathLoaded && (
+        <NewBathMenu setBathId={setBathId} setBathLoaded={setBathLoaded} />
+      )}
+      {bathLoaded && (
+        <p>
+          {bathName} is {Math.round(waterVolume)}% full
+          {waterVolume > 0 && ` and ${Math.round(waterTemp)}°c`}
+          {` with ${bathers.length} in the bath.`}
+        </p>
+      )}
       {bathLoaded ? (
         <div className="tub-container">
-          <div className="overflow"
+          <div
+            className="overflow"
             style={{
               backgroundImage: `linear-gradient(
           to top,
@@ -286,12 +306,8 @@ const Bath = ({ privateBath }) => {
           rgba(0, 0, 0, 0) 1px,
           rgba(0, 0, 0, 0)
         )`,
-            }} />
-          <p>
-            {bathName} is {Math.round(waterVolume)}% full
-            {waterVolume > 0 && ` and ${Math.round(waterTemp)}°c`}
-            {` with ${bathers.length} in the bath.`}
-          </p>
+            }}
+          />
           <div className="taps-container">
             {coldTap && hotTap && (
               <>
@@ -307,24 +323,34 @@ const Bath = ({ privateBath }) => {
           <div className="stream-container">
             {coldTap && hotTap && (
               <>
-                {overflowing && <div className="stream overflow-left" style={{
-                  backgroundImage:
-                    waterVolume == 0
-                      ? `linear-gradient(rgba(255, 214, 239, 1), rgba(0, 0, 0, 0))`
-                      : `linear-gradient(rgba(${calcWaterColour(
-                        waterTemp
-                      )}, 255, 1), rgba(0, 0, 0, 0))`,
-                }} />}
+                {overflowing && (
+                  <div
+                    className="stream overflow-left"
+                    style={{
+                      backgroundImage:
+                        waterVolume == 0
+                          ? `linear-gradient(rgba(255, 214, 239, 1), rgba(0, 0, 0, 0))`
+                          : `linear-gradient(rgba(${calcWaterColour(
+                              waterTemp
+                            )}, 255, 1), rgba(0, 0, 0, 0))`,
+                    }}
+                  />
+                )}
                 {coldTap.flow > 0 && <div className="stream cold" />}
                 {hotTap.flow > 0 && <div className="stream hot" />}
-                {overflowing && <div className="stream overflow-right" style={{
-                  backgroundImage:
-                    waterVolume == 0
-                      ? `linear-gradient(rgba(255, 214, 239, 1), rgba(0, 0, 0, 0))`
-                      : `linear-gradient(rgba(${calcWaterColour(
-                        waterTemp
-                      )}, 255, 1), rgba(0, 0, 0, 0))`,
-                }} />}
+                {overflowing && (
+                  <div
+                    className="stream overflow-right"
+                    style={{
+                      backgroundImage:
+                        waterVolume == 0
+                          ? `linear-gradient(rgba(255, 214, 239, 1), rgba(0, 0, 0, 0))`
+                          : `linear-gradient(rgba(${calcWaterColour(
+                              waterTemp
+                            )}, 255, 1), rgba(0, 0, 0, 0))`,
+                    }}
+                  />
+                )}
               </>
             )}
           </div>
@@ -348,8 +374,8 @@ const Bath = ({ privateBath }) => {
                 waterVolume == 0
                   ? `linear-gradient(rgba(255, 214, 239, 1), rgba(0, 0, 0, 0))`
                   : `linear-gradient(rgba(${calcWaterColour(
-                    waterTemp
-                  )}, 255, 1), rgba(0, 0, 0, 0))`,
+                      waterTemp
+                    )}, 255, 1), rgba(0, 0, 0, 0))`,
             }}
           ></div>
         </div>
