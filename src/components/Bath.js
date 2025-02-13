@@ -285,9 +285,9 @@ const Bath = ({ privateBath }) => {
 
   return (
     <div className="bath-container">
-      {bathLoaded && (
+      {/* bathLoaded && (
         <NewBathMenu setBathId={setBathId} setBathLoaded={setBathLoaded} />
-      )}
+      )*/}
       {bathLoaded && (
         <p>
           {bathName} is {Math.round(waterVolume)}% full
